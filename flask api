@@ -1,0 +1,61 @@
+from flask import Flask, request, jsonify
+import numpy as np
+import cv2
+import pytesseract
+
+app = Flask(__name__)
+
+def is_light(a):
+    colors, count = np.unique(a.flatten(), return_counts=True)
+    return colors[count.argmax()]
+
+def process_image(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # gray scale
+    img = cv2.threshold(img, 0, 255, cv2.THRESH_OTSU + cv2.THRESH_BINARY)[1]
+    return img
+
+def ocr(img):
+    rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 18))
+    dilation = cv2.dilate(img, rect_kernel, iterations=1)
+    contours, _ = cv2.findContours(dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    full_text = ""
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        cropped = img[y:y + h, x:x + w]
+        text = pytesseract.image_to_string(cropped)
+        full_text = full_text + text
+
+    return full_text
+
+@app.route('/', methods=['POST'])
+def pipeline():
+    try:
+        # Check if an image file is included in the request
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+
+        image_file = request.files['image']
+
+        # Check if the file has a filename
+        if image_file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+
+        # Convert the image to a NumPy array
+        image_np = np.fromstring(image_file.read(), np.uint8)
+        image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+
+        # Process the image and perform OCR
+        processed_image = process_image(image)
+        ocr_text = ocr(processed_image)
+
+        return jsonify({'result': ocr_text})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run()
+
+
+## use to run ## curl -X POST -F "image=@//Users/sandeepkarjala/Desktop/copycat-main/testimage.png" http://127.0.0.1:5000/

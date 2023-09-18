@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "OCR Extension",
+  "version": "1.0",
+  "description": "Perform OCR on images using the provided Flask API",
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["activeTab"]
+}

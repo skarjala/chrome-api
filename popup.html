@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OCR Extension</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    img {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>OCR Extension</h1>
+  <input type="file" id="imageInput" accept="image/*">
+  <button onclick="performOCR()">Perform OCR</button>
+  <div id="result"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
